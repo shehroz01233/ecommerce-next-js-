@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ProductAPI } from "./lib/api";
-import ProductCard from "./components/ProductCard";
+import { ProductAPI } from "../../lib/api";
+import ProductCard from "../../components/ProductCard";
 
 interface Product {
   id: number;
@@ -11,7 +11,7 @@ interface Product {
   image?: string;
 }
 
-export default function HomePage() {
+export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -32,22 +32,31 @@ export default function HomePage() {
   }, []);
 
   if (loading) {
-    return <h3>Loading products...</h3>;
+    return (
+      <h3 style={{ padding: "20px" }}>
+        Loading products...
+      </h3>
+    );
   }
 
   if (error) {
-    return <h3 style={{ color: "red" }}>{error}</h3>;
+    return (
+      <h3 style={{ color: "red", padding: "20px" }}>
+        {error}
+      </h3>
+    );
   }
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>🛍️ Products</h1>
+      <h1>🛍️ All Products</h1>
 
       <div
         style={{
           display: "flex",
           flexWrap: "wrap",
           gap: "15px",
+          marginTop: "20px",
         }}
       >
         {products.map((product) => (
