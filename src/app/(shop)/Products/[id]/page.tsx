@@ -205,7 +205,7 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            <p className="text-3xl font-bold text-foreground mb-4">${product.price.toFixed(2)}</p>
+            <p className="text-3xl font-bold text-foreground mb-4">${(product.price ?? 0).toFixed(2)}</p>
 
             {product.description && (
               <p className="text-muted text-sm mb-6 leading-relaxed">{product.description}</p>
@@ -233,7 +233,7 @@ export default function ProductDetailPage() {
                 </button>
                 <span className="w-12 text-center text-sm font-medium">{quantity}</span>
                 <button
-                  onClick={() => setQuantity((q) => Math.min(q + 1, product.stock ?? 999))}
+                  onClick={() => setQuantity((q) => Math.min(q + 1, product.stock && product.stock > 0 ? product.stock : 1))}
                   aria-label="Increase quantity"
                   className="w-10 h-10 flex items-center justify-center text-muted transition-base hover:bg-muted/10"
                 >
@@ -248,17 +248,17 @@ export default function ProductDetailPage() {
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleAddToCart}
-                disabled={addingToCart}
+                disabled={addingToCart || product.stock === 0}
                 className="btn-secondary flex-1 py-2.5"
               >
-                {addingToCart ? "Adding..." : "Add to Cart"}
+                {addingToCart ? "Adding..." : product.stock === 0 ? "Out of Stock" : "Add to Cart"}
               </button>
               <button
                 onClick={handleBuyNow}
-                disabled={buying}
+                disabled={buying || product.stock === 0}
                 className="btn-primary flex-1 py-2.5"
               >
-                {buying ? "Processing..." : "Buy Now"}
+                {buying ? "Processing..." : product.stock === 0 ? "Out of Stock" : "Buy Now"}
               </button>
             </div>
           </div>

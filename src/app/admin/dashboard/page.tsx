@@ -216,7 +216,7 @@ export default function AdminDashboardContent() {
                 {stats.recentOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-muted/5 transition-colors">
                     <td className="px-5 py-3.5 text-sm font-medium text-foreground">#{order.id}</td>
-                    <td className="px-5 py-3.5 text-sm text-foreground">${order.total?.toFixed(2)}</td>
+                    <td className="px-5 py-3.5 text-sm text-foreground">${(order.total ?? 0).toFixed(2)}</td>
                     <td className="px-5 py-3.5 text-sm">
                       <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${statusColor(order.status || "pending")}`}>
                         {order.status || "Pending"}

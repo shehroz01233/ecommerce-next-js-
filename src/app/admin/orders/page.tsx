@@ -131,7 +131,7 @@ export default function AdminOrdersContent() {
                   <td className="px-5 py-3.5 text-sm text-muted">
                     {order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? "s" : ""}
                   </td>
-                  <td className="px-5 py-3.5 text-sm font-semibold text-foreground">${order.total?.toFixed(2)}</td>
+                  <td className="px-5 py-3.5 text-sm font-semibold text-foreground">${(order.total ?? 0).toFixed(2)}</td>
                   <td className="px-5 py-3.5">
                     <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${statusColor(order.status || "pending")}`}>
                       {order.status || "Pending"}

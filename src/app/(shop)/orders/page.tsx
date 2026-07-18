@@ -116,7 +116,7 @@ function OrdersContent() {
                 <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${statusColor(order.status)}`}>
                   {order.status || "Pending"}
                 </span>
-                <span className="font-bold text-foreground">${order.total?.toFixed(2)}</span>
+                <span className="font-bold text-foreground">${(order.total ?? 0).toFixed(2)}</span>
                 <svg
                   aria-hidden="true"
                   className={`w-5 h-5 text-muted transition-transform duration-200 ${expandedOrder === order.id ? "rotate-180" : ""}`}

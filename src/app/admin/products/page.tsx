@@ -153,7 +153,7 @@ export default function AdminProductsContent() {
                     </div>
                   </td>
                   <td className="px-5 py-3.5 text-sm text-muted">{product.category || "-"}</td>
-                  <td className="px-5 py-3.5 text-sm font-semibold text-foreground">${product.price?.toFixed(2)}</td>
+                  <td className="px-5 py-3.5 text-sm font-semibold text-foreground">${(product.price ?? 0).toFixed(2)}</td>
                   <td className="px-5 py-3.5 text-sm text-muted">
                     {product.stock !== undefined ? (
                       <span className={product.stock > 0 ? "text-emerald-600" : "text-red-600"}>
