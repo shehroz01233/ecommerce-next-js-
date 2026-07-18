@@ -64,11 +64,14 @@ function ProductsContent() {
   }, [search, category, sort, page]);
 
   useEffect(() => {
-    ProductAPI.getCategories()
+    const controller = new AbortController();
+    ProductAPI.getCategories(controller.signal)
       .then((data) => {
+        if (controller.signal.aborted) return;
         if (Array.isArray(data)) setCategories(data);
       })
       .catch(() => {});
+    return () => controller.abort();
   }, []);
 
   const pushURL = useCallback((overrides: { search?: string; category?: string; sort?: string; page?: number }) => {

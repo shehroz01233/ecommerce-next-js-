@@ -25,16 +25,18 @@ export default function AdminProductsContent() {
     timerRef.current = setTimeout(() => setToast(null), duration);
   };
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const data = await AdminAPI.getAllProducts();
+      const data = await AdminAPI.getAllProducts(signal);
+      if (signal?.aborted) return;
       let safe: Product[] = [];
       if (Array.isArray(data)) safe = data;
       else if (Array.isArray((data as Record<string, unknown>)?.products)) safe = (data as Record<string, unknown>).products as Product[];
       else if (Array.isArray((data as Record<string, unknown>)?.data)) safe = (data as Record<string, unknown>).data as Product[];
       setProducts(safe);
     } catch (err: unknown) {
+      if (signal?.aborted) return;
       setError(err instanceof Error ? err.message : "Failed to load products");
     } finally {
       setLoading(false);
@@ -42,10 +44,10 @@ export default function AdminProductsContent() {
   };
 
   useEffect(() => {
-    const doFetch = async () => {
-      await fetchProducts();
-    };
-    doFetch();
+    const controller = new AbortController();
+    /* eslint-disable react-hooks/set-state-in-effect -- initial data fetch */
+    fetchProducts(controller.signal);
+    return () => controller.abort();
   }, []);
 
   const handleDelete = async (id: number, name: string) => {
@@ -107,7 +109,7 @@ export default function AdminProductsContent() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={fetchProducts}
+            onClick={() => fetchProducts()}
             className="btn-secondary px-4 py-2.5 hover:bg-muted/10 transition-colors"
           >
             Refresh

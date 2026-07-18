@@ -25,17 +25,20 @@ export default function AdminOrdersContent() {
     timerRef.current = setTimeout(() => setToast(null), duration);
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const data = await AdminAPI.getAllOrders();
+      const data = await AdminAPI.getAllOrders(signal);
+      if (signal?.aborted) return;
       if (Array.isArray(data)) {
         setOrders(data.sort((a, b) => (b.id || 0) - (a.id || 0)));
       } else {
-        const dashboard = await AdminAPI.getDashboard();
+        const dashboard = await AdminAPI.getDashboard(signal);
+        if (signal?.aborted) return;
         setOrders((dashboard?.orders || []).sort((a: Order, b: Order) => (b.id || 0) - (a.id || 0)));
       }
     } catch (err: unknown) {
+      if (signal?.aborted) return;
       setError(err instanceof Error ? err.message : "Failed to load orders");
     } finally {
       setLoading(false);
@@ -43,10 +46,10 @@ export default function AdminOrdersContent() {
   };
 
   useEffect(() => {
-    const doFetch = async () => {
-      await fetchOrders();
-    };
-    doFetch();
+    const controller = new AbortController();
+    /* eslint-disable react-hooks/set-state-in-effect -- initial data fetch */
+    fetchOrders(controller.signal);
+    return () => controller.abort();
   }, []);
 
   const handleStatusUpdate = async (orderId: number, newStatus: string) => {
@@ -99,7 +102,7 @@ export default function AdminOrdersContent() {
           <p className="text-sm text-muted mt-1">{orders.length} total order{orders.length !== 1 ? "s" : ""}</p>
         </div>
         <button
-          onClick={fetchOrders}
+          onClick={() => fetchOrders()}
           className="btn-secondary px-4 py-2.5 hover:bg-muted/10 transition-colors"
         >
           Refresh

@@ -104,17 +104,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const token = getToken();
       const localCart = loadLocalCart();
 
-      if (token) {
-        if (localCart.length > 0) {
-          await syncLocalToServer(localCart);
-          await refreshCart();
+      try {
+        if (token) {
+          if (localCart.length > 0) {
+            await syncLocalToServer(localCart);
+            await refreshCart();
+          } else {
+            await refreshCart();
+          }
         } else {
-          await refreshCart();
+          setCart(localCart);
         }
-      } else {
-        setCart(localCart);
+      } finally {
+        setHydrated(true);
       }
-      setHydrated(true);
     };
     initCart();
   }, [loadLocalCart, syncLocalToServer, refreshCart]);
@@ -136,23 +139,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
           await refreshCart();
           return;
         } catch {
-          // fall through to local
+          setCart((cur) => {
+            const existing = cur.find((i) => i.product.id === product.id);
+            const next = existing
+              ? cur.map((i) =>
+                  i.product.id === product.id
+                    ? { ...i, quantity: i.quantity + quantity }
+                    : i
+                )
+              : [...cur, { product, quantity }];
+            try { saveLocalCart(next); } catch { /* quota */ }
+            return next;
+          });
+          return;
         }
       }
 
-      setCart((prev) => {
-        const existing = prev.find((i) => i.product.id === product.id);
-        if (existing) {
-          return prev.map((i) =>
-            i.product.id === product.id
-              ? { ...i, quantity: i.quantity + quantity }
-              : i
-          );
-        }
-        return [...prev, { product, quantity }];
+      setCart((cur) => {
+        const existing = cur.find((i) => i.product.id === product.id);
+        const next = existing
+          ? cur.map((i) =>
+              i.product.id === product.id
+                ? { ...i, quantity: i.quantity + quantity }
+                : i
+            )
+          : [...cur, { product, quantity }];
+        try { saveLocalCart(next); } catch { /* quota */ }
+        return next;
       });
     },
-    [refreshCart]
+    [refreshCart, saveLocalCart]
   );
 
   const removeFromCart = useCallback(
@@ -166,13 +182,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
           await refreshCart();
           return;
         } catch {
-          // fall through
+          setCart((cur) => {
+            const next = cur.filter((i) => i.product.id !== productId);
+            try { saveLocalCart(next); } catch { /* quota */ }
+            return next;
+          });
+          return;
         }
       }
 
-      setCart((prev) => prev.filter((i) => i.product.id !== productId));
+      setCart((cur) => {
+        const next = cur.filter((i) => i.product.id !== productId);
+        try { saveLocalCart(next); } catch { /* quota */ }
+        return next;
+      });
     },
-    [refreshCart]
+    [refreshCart, saveLocalCart]
   );
 
   const decreaseQuantity = useCallback(
@@ -191,19 +216,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
           await refreshCart();
           return;
         } catch {
-          // fall through
+          setCart((cur) => {
+            const next = cur.map((i) =>
+              i.product.id === productId
+                ? { ...i, quantity: i.quantity - 1 }
+                : i
+            );
+            try { saveLocalCart(next); } catch { /* quota */ }
+            return next;
+          });
+          return;
         }
       }
 
-      setCart((prev) =>
-        prev.map((i) =>
+      setCart((cur) => {
+        const next = cur.map((i) =>
           i.product.id === productId
             ? { ...i, quantity: i.quantity - 1 }
             : i
-        )
-      );
+        );
+        try { saveLocalCart(next); } catch { /* quota */ }
+        return next;
+      });
     },
-    [removeFromCart, refreshCart]
+    [removeFromCart, refreshCart, saveLocalCart]
   );
 
   const updateQuantity = useCallback(
@@ -220,26 +256,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
           await refreshCart();
           return;
         } catch {
-          // fall through
+          setCart((cur) => {
+            const next = cur.map((i) =>
+              i.product.id === productId ? { ...i, quantity } : i
+            );
+            try { saveLocalCart(next); } catch { /* quota */ }
+            return next;
+          });
+          return;
         }
       }
 
-      setCart((prev) =>
-        prev.map((i) =>
+      setCart((cur) => {
+        const next = cur.map((i) =>
           i.product.id === productId ? { ...i, quantity } : i
-        )
-      );
+        );
+        try { saveLocalCart(next); } catch { /* quota */ }
+        return next;
+      });
     },
-    [removeFromCart, refreshCart]
+    [removeFromCart, refreshCart, saveLocalCart]
   );
 
   const clearCart = useCallback(async () => {
     const token = getToken();
     if (token) {
-      try { await CartAPI.clear(); } catch { /* clear locally even if server fails */ }
+      try {
+        await CartAPI.clear();
+      } catch {
+        // Server failed — clear locally but also save empty to localStorage
+        // so the next refresh doesn't restore stale items
+      }
     }
     setCart([]);
-    localStorage.removeItem("cart");
+    try { localStorage.removeItem("cart"); } catch { /* ignore */ }
   }, []);
 
   const totalPrice = useMemo(

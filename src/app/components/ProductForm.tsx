@@ -45,6 +45,14 @@ export default function ProductForm({
 }: ProductFormProps) {
   const [form, setForm] = useState<ProductFormData>(initialData || defaultData);
   const [imgError, setImgError] = useState(false);
+  const [prevInitialData, setPrevInitialData] = useState(initialData);
+  if (prevInitialData !== initialData) {
+    setPrevInitialData(initialData);
+    if (initialData) {
+      setForm(initialData);
+      setImgError(false);
+    }
+  }
 
   const update = (field: keyof ProductFormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));

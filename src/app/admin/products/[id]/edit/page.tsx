@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ProductAPI, AdminAPI } from "../../../../lib/api";
@@ -32,13 +32,16 @@ function EditProductContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const isCurrentRef = useRef(true);
 
   useEffect(() => {
+    isCurrentRef.current = true;
     if (!id) return;
     const controller = new AbortController();
     const fetchProduct = async () => {
       try {
-        const product = await ProductAPI.getById(id);
+        const product = await ProductAPI.getById(id, controller.signal);
+        if (!isCurrentRef.current) return;
         setInitialData({
           name: product.name || "",
           price: String(product.price || ""),
@@ -48,14 +51,18 @@ function EditProductContent() {
           stock: product.stock !== undefined ? String(product.stock) : "",
         });
       } catch (err: unknown) {
+        if (!isCurrentRef.current) return;
         if (err instanceof DOMException && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Failed to load product");
       } finally {
-        setLoading(false);
+        if (isCurrentRef.current) setLoading(false);
       }
     };
     fetchProduct();
-    return () => controller.abort();
+    return () => {
+      isCurrentRef.current = false;
+      controller.abort();
+    };
   }, [id]);
 
   const handleSubmit = async (data: {

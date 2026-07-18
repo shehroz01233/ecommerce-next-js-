@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { AdminAPI, User } from "../../lib/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import EmptyState from "../../components/EmptyState";
@@ -9,21 +9,31 @@ export default function AdminUsersContent() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const isCurrentRef = useRef(true);
 
   useEffect(() => {
+    isCurrentRef.current = true;
+    const controller = new AbortController();
     const fetchUsers = async () => {
       try {
-        const data = await AdminAPI.getAllUsers();
+        const data = await AdminAPI.getAllUsers(controller.signal);
+        if (!isCurrentRef.current) return;
         if (Array.isArray(data)) {
           setUsers(data);
         }
       } catch (err: unknown) {
+        if (!isCurrentRef.current) return;
+        if (err instanceof DOMException && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Failed to load users");
       } finally {
-        setLoading(false);
+        if (isCurrentRef.current) setLoading(false);
       }
     };
     fetchUsers();
+    return () => {
+      isCurrentRef.current = false;
+      controller.abort();
+    };
   }, []);
 
   if (loading) {

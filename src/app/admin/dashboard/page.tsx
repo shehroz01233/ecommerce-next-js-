@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AdminAPI, DashboardStats } from "../../lib/api";
 import { statusColor } from "../../lib/utils";
@@ -52,22 +52,29 @@ export default function AdminDashboardContent() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const isCurrentRef = useRef(true);
 
   useEffect(() => {
+    isCurrentRef.current = true;
     const controller = new AbortController();
     const fetchStats = async () => {
       try {
-        const data = await AdminAPI.getStats();
+        const data = await AdminAPI.getStats(controller.signal);
+        if (!isCurrentRef.current) return;
         setStats(data);
       } catch (err: unknown) {
+        if (!isCurrentRef.current) return;
         if (err instanceof DOMException && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Failed to load dashboard");
       } finally {
-        setLoading(false);
+        if (isCurrentRef.current) setLoading(false);
       }
     };
     fetchStats();
-    return () => controller.abort();
+    return () => {
+      isCurrentRef.current = false;
+      controller.abort();
+    };
   }, []);
 
   const statCards = useMemo(() => [

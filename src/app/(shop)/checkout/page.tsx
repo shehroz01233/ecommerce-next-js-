@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { useCart } from "../../hooks/useCart";
 import { OrderAPI } from "../../lib/api";
@@ -22,6 +22,7 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const submittingRef = useRef(false);
 
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
@@ -68,11 +69,13 @@ function CheckoutContent() {
   }
 
   const handleCheckout = async () => {
+    if (submittingRef.current) return;
     if (!address.trim() || !city.trim()) {
       setError("Please fill in your shipping address");
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
     setError("");
 
@@ -96,6 +99,7 @@ function CheckoutContent() {
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Checkout failed. Please try again.");
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   };
