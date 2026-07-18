@@ -51,6 +51,9 @@ export default function ProductForm({
     if (initialData) {
       setForm(initialData);
       setImgError(false);
+    } else {
+      setForm(defaultData);
+      setImgError(false);
     }
   }
 
@@ -90,8 +93,9 @@ export default function ProductForm({
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Product Name *</label>
+          <label htmlFor="pf-name" className="block text-sm font-medium text-foreground mb-1.5">Product Name *</label>
           <input
+            id="pf-name"
             type="text"
             required
             value={form.name}
@@ -103,8 +107,9 @@ export default function ProductForm({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Price ($) *</label>
+            <label htmlFor="pf-price" className="block text-sm font-medium text-foreground mb-1.5">Price ($) *</label>
             <input
+              id="pf-price"
               type="number"
               required
               min="0"
@@ -116,8 +121,9 @@ export default function ProductForm({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Stock</label>
+            <label htmlFor="pf-stock" className="block text-sm font-medium text-foreground mb-1.5">Stock</label>
             <input
+              id="pf-stock"
               type="number"
               min="0"
               value={form.stock}
@@ -129,8 +135,9 @@ export default function ProductForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Category</label>
+          <label htmlFor="pf-category" className="block text-sm font-medium text-foreground mb-1.5">Category</label>
           <input
+            id="pf-category"
             type="text"
             value={form.category}
             onChange={(e) => update("category", e.target.value)}
@@ -140,8 +147,9 @@ export default function ProductForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Image URL</label>
+          <label htmlFor="pf-image" className="block text-sm font-medium text-foreground mb-1.5">Image URL</label>
           <input
+            id="pf-image"
             type="url"
             value={form.image}
             onChange={(e) => update("image", e.target.value)}
@@ -161,8 +169,9 @@ export default function ProductForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
+          <label htmlFor="pf-description" className="block text-sm font-medium text-foreground mb-1.5">Description</label>
           <textarea
+            id="pf-description"
             value={form.description}
             onChange={(e) => update("description", e.target.value)}
             placeholder="Product description..."
