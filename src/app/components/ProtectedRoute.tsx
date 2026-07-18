@@ -3,31 +3,49 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../hooks/useAuth";
+import LoadingSpinner from "./LoadingSpinner";
 
 export default function ProtectedRoute({
   children,
+  adminOnly = false,
 }: {
   children: React.ReactNode;
+  adminOnly?: boolean;
 }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, isAdmin, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.push("/login");
+    if (!loading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (adminOnly && !isAdmin) {
+        router.push("/");
+      }
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, isAdmin, loading, adminOnly, router]);
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", padding: "20px" }}>
-        Loading...
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-sm text-muted">Redirecting to sign in…</p>
+      </div>
+    );
+  }
+  if (adminOnly && !isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-sm text-muted">Redirecting…</p>
+      </div>
+    );
   }
 
   return <>{children}</>;

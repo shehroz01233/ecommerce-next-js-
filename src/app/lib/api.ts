@@ -1,225 +1,26 @@
-// // lib/api.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// DATABASE_URL is for the database connection, not an API endpoint — never use it as the API URL.
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
-// const BASE_URL =
-//   process.env.DATABASE_URL || "http://127.0.0.1:8000";
+import { getToken } from "./auth";
 
-// // =========================
-// // Generic API Request
-// // =========================
-// export async function apiRequest(
-//   endpoint: string,
-//   options: RequestInit = {}
-// ) {
-//   try {
-//     const token =
-//       typeof window !== "undefined"
-//         ? localStorage.getItem("token")
-//         : null;
-
-//     const response = await fetch(`${BASE_URL}${endpoint}`, {
-//       ...options,
-//       headers: {
-//         "Content-Type": "application/json",
-//         ...(token
-//           ? {
-//               Authorization: `Bearer ${token}`,
-//             }
-//           : {}),
-//         ...(options.headers || {}),
-//       },
-//     });
-
-//     const contentType = response.headers.get("content-type");
-
-//     let data: any = null;
-
-//     if (contentType?.includes("application/json")) {
-//       data = await response.json();
-//     } else {
-//       data = await response.text();
-//     }
-
-//     if (!response.ok) {
-//       throw new Error(
-//         data?.detail ||
-//           data?.message ||
-//           `API Error (${response.status})`
-//       );
-//     }
-
-//     return data;
-//   } catch (error: any) {
-//     throw new Error(error.message || "Network Error");
-//   }
-// }
-
-// // =========================
-// // GET
-// // =========================
-// export async function get(endpoint: string) {
-//   return apiRequest(endpoint, {
-//     method: "GET",
-//   });
-// }
-
-// // =========================
-// // POST
-// // =========================
-// export async function post(endpoint: string, body: any) {
-//   return apiRequest(endpoint, {
-//     method: "POST",
-//     body: JSON.stringify(body),
-//   });
-// }
-
-// // =========================
-// // PUT
-// // =========================
-// export async function put(endpoint: string, body: any) {
-//   return apiRequest(endpoint, {
-//     method: "PUT",
-//     body: JSON.stringify(body),
-//   });
-// }
-
-// // =========================
-// // PATCH
-// // =========================
-// export async function patch(endpoint: string, body: any) {
-//   return apiRequest(endpoint, {
-//     method: "PATCH",
-//     body: JSON.stringify(body),
-//   });
-// }
-
-// // =========================
-// // DELETE
-// // =========================
-// export async function del(endpoint: string) {
-//   return apiRequest(endpoint, {
-//     method: "DELETE",
-//   });
-// }
-
-// // =========================
-// // AUTH API
-// // =========================
-// export const AuthAPI = {
-//   register: (userData: {
-//     name: string;
-//     email: string;
-//     password: string;
-//   }) =>
-//     post("/api/auth/register", userData),
-
-//   login: (credentials: {
-//     email: string;
-//     password: string;
-//   }) =>
-//     post("/api/auth/login", credentials),
-// };
-
-// // =========================
-// // PRODUCT API
-// // =========================
-// export const ProductAPI = {
-//   getAll: () => get("/api/products"),
-
-//   getById: (id: number) =>
-//     get(`/api/products/${id}`),
-
-//   create: (productData: any) =>
-//     post("/api/products", productData),
-
-//   update: (id: number, productData: any) =>
-//     put(`/api/products/${id}`, productData),
-
-//   delete: (id: number) =>
-//     del(`/api/products/${id}`),
-// };
-
-// // =========================
-// // CART API
-// // =========================
-// export const CartAPI = {
-//   getCart: (userId: number) =>
-//     get(`/api/cart/${userId}`),
-
-//   addToCart: (cartData: any) =>
-//     post("/api/cart", cartData),
-
-//   removeItem: (cartId: number) =>
-//     del(`/api/cart/${cartId}`),
-// };
-
-// // =========================
-// // ORDER API
-// // =========================
-// export const OrderAPI = {
-//   createOrder: (orderData: any) =>
-//     post("/api/orders", orderData),
-
-//   getUserOrders: (userId: number) =>
-//     get(`/api/orders/user/${userId}`),
-
-//   getAllOrders: () =>
-//     get("/api/orders"),
-// };
-
-// // =========================
-// // ADMIN API
-// // =========================
-// export const AdminAPI = {
-//   getDashboard: () =>
-//     get("/api/admin"),
-
-//   getStats: () =>
-//     get("/api/admin/stats"),
-// };
-
-
-const BASE_URL =
-  process.env.DATABASE_URL ||
-  "http://127.0.0.1:8000";
-
-// =========================
-// TOKEN HELP
-// =========================
-function getToken() {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("token");
-}
-
-// =========================
-// CORE REQUEST
-// =========================
-async function request(
+async function request<T = any>(
   endpoint: string,
   options: RequestInit = {}
-) {
+): Promise<T> {
   try {
     const token = getToken();
 
-    const res = await fetch(
-      `${BASE_URL}${endpoint}`,
-      {
-        ...options,
-        headers: {
-          "Content-Type":
-            "application/json",
-          ...(token
-            ? {
-                Authorization: `Bearer ${token}`,
-              }
-            : {}),
-          ...(options.headers || {}),
-        },
-      }
-    );
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers || {}),
+      },
+    });
 
-    const contentType =
-      res.headers.get("content-type");
-
+    const contentType = res.headers.get("content-type");
     let data: any = null;
 
     if (contentType?.includes("application/json")) {
@@ -229,127 +30,259 @@ async function request(
     }
 
     if (!res.ok) {
-      throw new Error(
-        data?.detail ||
-          data?.message ||
-          "API Error"
-      );
+      const raw =
+        typeof data === "string"
+          ? data
+          : data?.detail || data?.message || `API Error (${res.status})`;
+      if (process.env.NODE_ENV === "development") {
+        console.error(`[API] ${res.status} ${endpoint}: ${raw}`);
+      }
+
+      const statusMessages: Record<number, string> = {
+        400: "Invalid request",
+        401: "Authentication required. Please sign in.",
+        403: "You don't have permission for this action",
+        404: "Resource not found",
+        409: "Conflict — this may already exist",
+        422: "Invalid data provided",
+        429: "Too many requests. Please try again later",
+      };
+
+      const friendly =
+        res.status >= 500
+          ? "Server error. Please try again later"
+          : statusMessages[res.status] ||
+            "Something went wrong. Please try again.";
+      throw new Error(friendly);
     }
 
-    return data;
+    return data as T;
   } catch (err: any) {
-    throw new Error(
-      err.message || "Network Error"
-    );
+    if (err.name === "AbortError") throw err;
+    if (err instanceof Error && err.message.startsWith("Authentication required")) throw err;
+    if (err instanceof Error && err.message.startsWith("Server error")) throw err;
+    if (err.name === "TypeError" && err.message.includes("fetch")) {
+      throw new Error("Network error – server may be offline");
+    }
+    if (err instanceof Error) throw err;
+    throw new Error("Unknown error");
   }
 }
 
-// =========================
-// METHOD HELPERS
-// =========================
-const get = (url: string) =>
-  request(url, { method: "GET" });
+function get<T = any>(url: string, signal?: AbortSignal) {
+  return request<T>(url, { method: "GET", signal });
+}
 
-const post = (url: string, body?: any) =>
-  request(url, {
+function post<T = any>(url: string, body?: any, signal?: AbortSignal) {
+  return request<T>(url, {
     method: "POST",
-    body: JSON.stringify(body),
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    signal,
   });
+}
 
-const put = (url: string, body?: any) =>
-  request(url, {
+function put<T = any>(url: string, body?: any, signal?: AbortSignal) {
+  return request<T>(url, {
     method: "PUT",
-    body: JSON.stringify(body),
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    signal,
   });
+}
 
-const del = (url: string) =>
-  request(url, { method: "DELETE" });
+function patch<T = any>(url: string, body?: any, signal?: AbortSignal) {
+  return request<T>(url, {
+    method: "PATCH",
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    signal,
+  });
+}
 
-// =========================
+function del<T = any>(url: string, signal?: AbortSignal) {
+  return request<T>(url, { method: "DELETE", signal });
+}
+
+// =====================
+// TYPES
+// =====================
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role?: string;
+  created_at?: string;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  description?: string;
+  image?: string;
+  category?: string;
+  stock?: number;
+  rating?: number;
+  review_count?: number;
+  created_at?: string;
+}
+
+export interface CartItem {
+  id?: number;
+  product: Product;
+  quantity: number;
+}
+
+export interface Order {
+  id: number;
+  total: number;
+  status: string;
+  items: OrderItem[];
+  created_at?: string;
+  user_id?: number;
+}
+
+export interface OrderItem {
+  product_id: number;
+  product_name?: string;
+  quantity: number;
+  price?: number;
+}
+
+export interface Review {
+  id: number;
+  user_id: number;
+  user_name?: string;
+  product_id: number;
+  rating: number;
+  comment: string;
+  created_at?: string;
+}
+
+export interface DashboardStats {
+  totalProducts: number;
+  totalOrders: number;
+  totalUsers: number;
+  totalRevenue?: number;
+  recentOrders?: Order[];
+}
+
+// =====================
 // AUTH API
-// =========================
+// =====================
 export const AuthAPI = {
-  register: (data: {
-    name: string;
-    email: string;
-    password: string;
-  }) => post("/api/auth/register", data),
+  register: (data: { name: string; email: string; password: string }) =>
+    post<{ message?: string }>("/api/auth/register", data),
 
-  login: (data: {
-    email: string;
-    password: string;
-  }) => post("/api/auth/login", data),
+  login: (data: { email: string; password: string }) =>
+    post<{ access_token: string; user?: User }>("/api/auth/login", data),
+
+  me: () => get<User>("/api/auth/me"),
 };
 
-// =========================
+// =====================
 // PRODUCT API
-// =========================
+// =====================
 export const ProductAPI = {
-  getAll: () => get("/api/products"),
+  getAll: (params?: { search?: string; category?: string; sort?: string; page?: number; limit?: number }, signal?: AbortSignal) => {
+    const query = new URLSearchParams();
+    if (params?.search) query.set("search", params.search);
+    if (params?.category) query.set("category", params.category);
+    if (params?.sort) query.set("sort", params.sort);
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.limit) query.set("limit", String(params.limit));
+    const qs = query.toString();
+    return get<Product[] | { products: Product[]; total?: number; page?: number; pages?: number }>(
+      `/api/products${qs ? `?${qs}` : ""}`,
+      signal
+    );
+  },
 
-  getById: (id: number) =>
-    get(`/api/products/${id}`),
+  getById: (id: number, signal?: AbortSignal) => get<Product>(`/api/products/${id}`, signal),
 
-  create: (data: any) =>
-    post("/api/products", data),
+  create: (data: Partial<Product>, signal?: AbortSignal) => post<Product>("/api/products", data, signal),
 
-  update: (id: number, data: any) =>
-    put(`/api/products/${id}`, data),
+  update: (id: number, data: Partial<Product>, signal?: AbortSignal) =>
+    put<Product>(`/api/products/${id}`, data, signal),
 
-  delete: (id: number) =>
-    del(`/api/products/${id}`),
+  delete: (id: number, signal?: AbortSignal) => del(`/api/products/${id}`, signal),
+
+  getCategories: (signal?: AbortSignal) => get<string[]>("/api/products/categories", signal),
+
+  getReviews: (id: number, signal?: AbortSignal) => get<Review[]>(`/api/products/${id}/reviews`, signal),
+
+  addReview: (id: number, data: { rating: number; comment: string }, signal?: AbortSignal) =>
+    post<Review>(`/api/products/${id}/reviews`, data, signal),
 };
 
-// =========================
+// =====================
 // CART API
-// =========================
+// =====================
 export const CartAPI = {
-  getCart: (userId: number) =>
-    get(`/api/cart/${userId}`),
+  getCart: (signal?: AbortSignal) => get<CartItem[]>("/api/cart", signal),
 
-  addToCart: (data: any) =>
-    post("/api/cart", data),
+  addItem: (data: { product_id: number; quantity?: number }, signal?: AbortSignal) =>
+    post<CartItem>("/api/cart", data, signal),
 
-  removeItem: (id: number) =>
-    del(`/api/cart/${id}`),
+  updateItem: (itemId: number, quantity: number, signal?: AbortSignal) =>
+    put<CartItem>(`/api/cart/${itemId}`, { quantity }, signal),
+
+  removeItem: (itemId: number, signal?: AbortSignal) => del(`/api/cart/${itemId}`, signal),
+
+  clear: (signal?: AbortSignal) => del("/api/cart", signal),
 };
 
-// =========================
+// =====================
 // ORDER API
-// =========================
+// =====================
 export const OrderAPI = {
-  createOrder: (data: any) =>
-    post("/api/orders", data),
+  createOrder: (data: {
+    items: { product_id: number; quantity: number }[];
+    shipping_address?: { address: string; city: string; zip_code: string; phone: string };
+  }, signal?: AbortSignal) =>
+    post<Order>("/api/orders", data, signal),
 
-  getUserOrders: (userId: number) =>
-    get(`/api/orders/user/${userId}`),
+  getUserOrders: (signal?: AbortSignal) => get<Order[]>("/api/orders", signal),
 
-  getAllOrders: () =>
-    get("/api/orders"),
+  getOrderById: (id: number, signal?: AbortSignal) => get<Order>(`/api/orders/${id}`, signal),
 };
 
-// =========================
-// ADMIN API (FIXED - COMPLETE)
-// =========================
+// =====================
+// ADMIN API
+// =====================
 export const AdminAPI = {
-  getDashboard: () =>
-    get("/api/admin"),
+  getDashboard: (signal?: AbortSignal) => get<{ orders: Order[] }>("/api/admin", signal),
 
-  getStats: () =>
-    get("/api/admin/stats"),
+  getStats: (signal?: AbortSignal) => get<DashboardStats>("/api/admin/stats", signal),
 
-  getAllProducts: () =>
-    get("/api/admin/products"),
+  getAllProducts: (signal?: AbortSignal) => get<Product[]>("/api/admin/products", signal),
 
-  createProduct: (data: any) =>
-    post("/api/admin/products", data),
+  createProduct: (data: Partial<Product>, signal?: AbortSignal) =>
+    post<Product>("/api/admin/products", data, signal),
 
-  updateProduct: (
-    id: number,
-    data: any
-  ) =>
-    put(`/api/admin/products/${id}`, data),
+  updateProduct: (id: number, data: Partial<Product>, signal?: AbortSignal) =>
+    put<Product>(`/api/admin/products/${id}`, data, signal),
 
-  deleteProduct: (id: number) =>
-    del(`/api/admin/products/${id}`),
+  deleteProduct: (id: number, signal?: AbortSignal) => del(`/api/admin/products/${id}`, signal),
+
+  getAllOrders: (signal?: AbortSignal) => get<Order[]>("/api/admin/orders", signal),
+
+  updateOrderStatus: (id: number, status: string, signal?: AbortSignal) =>
+    patch<Order>(`/api/admin/orders/${id}`, { status }, signal),
+
+  getAllUsers: (signal?: AbortSignal) => get<User[]>("/api/admin/users", signal),
+};
+
+// =====================
+// WISHLIST API
+// =====================
+export const WishlistAPI = {
+  getAll: (signal?: AbortSignal) => get<Product[]>("/api/wishlist", signal),
+
+  add: (productId: number, signal?: AbortSignal) =>
+    post<{ message?: string }>(`/api/wishlist/${productId}`, undefined, signal),
+
+  remove: (productId: number, signal?: AbortSignal) =>
+    del(`/api/wishlist/${productId}`, signal),
+
+  check: (productId: number, signal?: AbortSignal) =>
+    get<{ wishlisted: boolean }>(`/api/wishlist/${productId}/check`, signal),
 };
