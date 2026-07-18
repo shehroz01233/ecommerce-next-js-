@@ -85,6 +85,7 @@ export default function Navbar() {
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search products"
                 className="bg-white/10 text-sm text-white placeholder-gray-500 rounded-full pl-10 pr-4 py-1.5 outline-none border border-white/10 focus:border-white/30 focus:bg-white/15 w-64 transition-all duration-200"
               />
             </div>
@@ -159,6 +160,7 @@ export default function Navbar() {
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search products"
                 className="w-full bg-white/10 text-sm text-white placeholder-gray-500 rounded-lg pl-10 pr-4 py-2 outline-none border border-white/10"
               />
             </div>

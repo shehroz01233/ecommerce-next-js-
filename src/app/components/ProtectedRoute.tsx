@@ -36,14 +36,14 @@ export default function ProtectedRoute({
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-muted">Redirecting to sign in…</p>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
   if (adminOnly && !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-muted">Redirecting…</p>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
