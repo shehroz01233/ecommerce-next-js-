@@ -126,7 +126,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!hydrated) return;
     const token = getToken();
     if (!token) {
-      saveLocalCart(cart);
+      try { saveLocalCart(cart); } catch { /* quota exceeded */ }
     }
   }, [cart, hydrated, saveLocalCart]);
 

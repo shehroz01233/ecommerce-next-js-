@@ -94,7 +94,7 @@ function CheckoutContent() {
       };
 
       await OrderAPI.createOrder(orderPayload);
-      await clearCart();
+      clearCart().catch(() => {});
       setSuccess("Your order has been placed successfully! You will receive a confirmation soon.");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Checkout failed. Please try again.");
