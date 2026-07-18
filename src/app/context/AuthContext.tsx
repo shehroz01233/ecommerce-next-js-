@@ -41,29 +41,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
     const initAuth = async () => {
       const token = getToken();
       if (token) {
         try {
-          const userData = await AuthAPI.me();
-          setUser(userData);
+          const userData = await AuthAPI.me(controller.signal);
+          if (!controller.signal.aborted) setUser(userData);
         } catch {
-          removeToken();
+          if (!controller.signal.aborted) removeToken();
         }
       }
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     };
     initAuth();
+    return () => controller.abort();
   }, []);
 
   const login = useCallback(async (data: LoginData) => {
     const response = await AuthAPI.login(data);
-    setToken(response.access_token);
 
     try {
       if (response.user) {
         setUser(response.user);
+        setToken(response.access_token);
       } else {
+        setToken(response.access_token);
         const me = await AuthAPI.me();
         setUser(me);
       }
