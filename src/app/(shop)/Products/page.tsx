@@ -17,26 +17,32 @@ function ProductsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const [category, setCategory] = useState(initialCategory);
   const [categories, setCategories] = useState<string[]>([]);
   const [sort, setSort] = useState(searchParams.get("sort") || "");
   const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
   const [totalPages, setTotalPages] = useState(1);
   const fetchIdRef = useRef(0);
-  const [prevFilters, setPrevFilters] = useState({ search, category, sort, page });
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  if (prevFilters.search !== search || prevFilters.category !== category || prevFilters.sort !== sort || prevFilters.page !== page) {
-    setPrevFilters({ search, category, sort, page });
-    setLoading(true);
-    setError("");
-  }
+  useEffect(() => {
+    clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(searchTimerRef.current);
+  }, [search]);
 
   useEffect(() => {
     const id = ++fetchIdRef.current;
+    setLoading(true);
+    setError("");
 
     const controller = new AbortController();
     ProductAPI.getAll({
-      search: search || undefined,
+      search: debouncedSearch || undefined,
       category: category || undefined,
       sort: sort || undefined,
       page,
@@ -61,7 +67,7 @@ function ProductsContent() {
       });
 
     return () => { controller.abort(); };
-  }, [search, category, sort, page]);
+  }, [debouncedSearch, category, sort, page]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -89,13 +95,15 @@ function ProductsContent() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    clearTimeout(searchTimerRef.current);
+    setDebouncedSearch(search);
     setPage(1);
     pushURL({ page: 1 });
   };
 
   const removeFilter = (type: "search" | "category" | "sort") => {
     const next = { search, category, sort };
-    if (type === "search") { setSearch(""); next.search = ""; }
+    if (type === "search") { setSearch(""); setDebouncedSearch(""); next.search = ""; }
     if (type === "category") { setCategory(""); next.category = ""; }
     if (type === "sort") { setSort(""); next.sort = ""; }
     setPage(1);
@@ -190,7 +198,7 @@ function ProductsContent() {
             </span>
           )}
           <button
-            onClick={() => { setSearch(""); setCategory(""); setSort(""); setPage(1); pushURL({ search: "", category: "", sort: "", page: 1 }); }}
+            onClick={() => { setSearch(""); setDebouncedSearch(""); setCategory(""); setSort(""); setPage(1); pushURL({ search: "", category: "", sort: "", page: 1 }); }}
             className="text-xs text-muted transition-base hover:text-foreground"
           >
             Clear all
@@ -239,19 +247,34 @@ function ProductsContent() {
               >
                 Previous
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPage(p)}
-                  className={`w-9 h-9 rounded-xl text-sm font-medium transition-base ${
-                    p === page
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted hover:bg-muted/10"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
+              {(() => {
+                const pages: (number | "...")[] = [];
+                const windowSize = 2;
+                const start = Math.max(2, page - windowSize);
+                const end = Math.min(totalPages - 1, page + windowSize);
+                pages.push(1);
+                if (start > 2) pages.push("...");
+                for (let i = start; i <= end; i++) pages.push(i);
+                if (end < totalPages - 1) pages.push("...");
+                if (totalPages > 1) pages.push(totalPages);
+                return pages.map((p, idx) =>
+                  p === "..." ? (
+                    <span key={`e${idx}`} className="px-1 text-xs text-muted">...</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`w-9 h-9 rounded-xl text-sm font-medium transition-base ${
+                        p === page
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted hover:bg-muted/10"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  )
+                );
+              })()}
               <button
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
