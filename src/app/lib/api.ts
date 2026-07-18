@@ -2,6 +2,10 @@
 // DATABASE_URL is for the database connection, not an API endpoint — never use it as the API URL.
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
+if (process.env.NODE_ENV === "production" && BASE_URL.startsWith("http://")) {
+  console.error("[SECURITY] NEXT_PUBLIC_API_URL must use HTTPS in production");
+}
+
 import { getToken } from "./auth";
 
 async function request<T = any>(
