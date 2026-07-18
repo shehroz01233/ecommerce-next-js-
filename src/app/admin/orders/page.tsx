@@ -1,29 +1,18 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { AdminAPI, Order } from "../../lib/api";
 import { statusColor } from "../../lib/utils";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import EmptyState from "../../components/EmptyState";
-import Toast from "../../components/Toast";
+import { useToast } from "../../components/Toast";
 
 export default function AdminOrdersContent() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
-
-  const showToast = useCallback((t: { type: "success" | "error"; message: string }, duration: number) => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setToast(t);
-    timerRef.current = setTimeout(() => setToast(null), duration);
-  }, []);
+  const { addToast } = useToast();
 
   const fetchOrders = async (signal?: AbortSignal) => {
     setLoading(true);
@@ -59,10 +48,10 @@ export default function AdminOrdersContent() {
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
       );
-      showToast({ type: "success", message: `Order #${orderId} updated to "${newStatus}"` }, 2500);
+      addToast("success", `Order #${orderId} updated to "${newStatus}"`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to update status";
-      showToast({ type: "error", message: msg }, 3000);
+      addToast("error", msg);
     } finally {
       setUpdatingId(null);
     }
@@ -165,8 +154,6 @@ export default function AdminOrdersContent() {
           </table>
         </div>
       </div>
-
-      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
     </div>
   );
 }

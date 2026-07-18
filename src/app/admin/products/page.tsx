@@ -1,29 +1,18 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminAPI, Product } from "../../lib/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import EmptyState from "../../components/EmptyState";
-import Toast from "../../components/Toast";
+import { useToast } from "../../components/Toast";
 
 export default function AdminProductsContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
-
-  const showToast = (t: { type: "success" | "error"; message: string }, duration: number) => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setToast(t);
-    timerRef.current = setTimeout(() => setToast(null), duration);
-  };
+  const { addToast } = useToast();
 
   const fetchProducts = async (signal?: AbortSignal) => {
     setLoading(true);
@@ -56,9 +45,9 @@ export default function AdminProductsContent() {
     try {
       await AdminAPI.deleteProduct(id);
       setProducts((prev) => prev.filter((p) => p.id !== id));
-      showToast({ type: "success", message: `"${name}" deleted` }, 2000);
+      addToast("success", `"${name}" deleted`);
     } catch (err: unknown) {
-      showToast({ type: "error", message: err instanceof Error ? err.message : "Delete failed" }, 3000);
+      addToast("error", err instanceof Error ? err.message : "Delete failed");
     } finally {
       setDeletingId(null);
     }
@@ -186,8 +175,6 @@ export default function AdminProductsContent() {
           </table>
         </div>
       </div>
-
-      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
     </div>
   );
 }

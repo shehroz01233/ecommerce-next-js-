@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../hooks/useAuth";
 import ProtectedRoute from "../../components/ProtectedRoute";
-import Toast from "../../components/Toast";
+import { useToast } from "../../components/Toast";
 
 export default function ProfilePage() {
   return (
@@ -17,40 +17,20 @@ export default function ProfilePage() {
 function ProfileContent() {
   const { user, updateUser, logout } = useAuth();
   const router = useRouter();
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { addToast } = useToast();
 
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
-  const [prevUser, setPrevUser] = useState(user);
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
-
-  if (prevUser !== user) {
-    setPrevUser(user);
-    setName(user?.name || "");
-    setEmail(user?.email || "");
-  }
-
-  useEffect(() => {
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
-
-  const showToast = useCallback((t: { type: "success" | "error"; message: string }, duration: number) => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setToast(t);
-    timerRef.current = setTimeout(() => setToast(null), duration);
-  }, []);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // TODO: Backend needs an AuthAPI.updateProfile() endpoint to persist this server-side.
-      // Currently this only updates local state and will revert on page refresh.
       updateUser({ name });
-      showToast({ type: "success", message: "Profile updated!" }, 2000);
+      addToast("success", "Profile updated!");
     } catch (err: unknown) {
-      showToast({ type: "error", message: err instanceof Error ? err.message : "Update failed" }, 3000);
+      addToast("error", err instanceof Error ? err.message : "Update failed");
     } finally {
       setLoading(false);
     }
@@ -146,8 +126,6 @@ function ProfileContent() {
           Sign Out
         </button>
       </div>
-
-      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
     </div>
   );
 }

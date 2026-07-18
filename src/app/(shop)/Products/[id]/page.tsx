@@ -1,43 +1,32 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ProductAPI, Review, Product } from "../../../lib/api";
 import { useCart } from "../../../hooks/useCart";
 import { useAuth } from "../../../hooks/useAuth";
 import LoadingSpinner from "../../../components/LoadingSpinner";
-import Toast from "../../../components/Toast";
+import { useToast } from "../../../components/Toast";
 
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { addToast } = useToast();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [buying, setBuying] = useState(false);
-
-  useEffect(() => {
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
-
-  const showToast = useCallback((t: { type: "success" | "error"; message: string }, duration: number) => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setToast(t);
-    timerRef.current = setTimeout(() => setToast(null), duration);
-  }, []);
 
   const id = Number(params?.id);
 
@@ -78,9 +67,9 @@ export default function ProductDetailPage() {
     setAddingToCart(true);
     try {
       await addToCart(product, quantity);
-      showToast({ type: "success", message: `${quantity} × ${product.name} added to cart` }, 2000);
+      addToast("success", `${quantity} × ${product.name} added to cart`);
     } catch (err: unknown) {
-      showToast({ type: "error", message: err instanceof Error ? err.message : "Failed to add" }, 3000);
+      addToast("error", err instanceof Error ? err.message : "Failed to add");
     } finally {
       setAddingToCart(false);
     }
@@ -93,7 +82,7 @@ export default function ProductDetailPage() {
       await addToCart(product, quantity);
       router.push("/cart");
     } catch (err: unknown) {
-      showToast({ type: "error", message: err instanceof Error ? err.message : "Failed" }, 3000);
+      addToast("error", err instanceof Error ? err.message : "Failed");
     } finally {
       setBuying(false);
     }
@@ -111,9 +100,9 @@ export default function ProductDetailPage() {
       setReviews((prev) => [newReview, ...prev]);
       setReviewComment("");
       setReviewRating(5);
-      showToast({ type: "success", message: "Review submitted!" }, 2000);
+      addToast("success", "Review submitted!");
     } catch (err: unknown) {
-      showToast({ type: "error", message: err instanceof Error ? err.message : "Failed to submit review" }, 3000);
+      addToast("error", err instanceof Error ? err.message : "Failed to submit review");
     } finally {
       setSubmittingReview(false);
     }
@@ -333,8 +322,6 @@ export default function ProductDetailPage() {
           ))}
         </div>
       </div>
-
-      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
     </div>
   );
 }
