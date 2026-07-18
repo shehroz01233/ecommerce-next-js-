@@ -47,7 +47,7 @@ export default function AdminUsersContent() {
   if (error) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">{error}</div>
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 text-destructive text-sm">{error}</div>
       </div>
     );
   }
@@ -88,9 +88,9 @@ export default function AdminUsersContent() {
                   <td className="px-5 py-3.5">
                     <span
                       className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
-                        user.role === "admin"
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-gray-100 text-gray-600"
+                          user.role === "admin"
+                          ? "bg-accent/10 text-accent"
+                          : "bg-muted/10 text-muted"
                       }`}
                     >
                       {user.role || "user"}

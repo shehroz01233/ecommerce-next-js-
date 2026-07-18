@@ -64,7 +64,7 @@ export default function AdminProductsContent() {
   if (error) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">{error}</div>
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 text-destructive text-sm">{error}</div>
       </div>
     );
   }
@@ -145,7 +145,7 @@ export default function AdminProductsContent() {
                   <td className="px-5 py-3.5 text-sm font-semibold text-foreground">${(product.price ?? 0).toFixed(2)}</td>
                   <td className="px-5 py-3.5 text-sm text-muted">
                     {product.stock !== undefined ? (
-                      <span className={product.stock > 0 ? "text-emerald-600" : "text-red-600"}>
+                      <span className={product.stock > 0 ? "text-success" : "text-destructive"}>
                         {product.stock}
                       </span>
                     ) : (
@@ -163,7 +163,7 @@ export default function AdminProductsContent() {
                       <button
                         onClick={() => handleDelete(product.id, product.name)}
                         disabled={deletingId === product.id}
-                        className="px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-600 rounded-xl hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+                        className="px-3 py-1.5 text-xs font-medium bg-destructive/10 text-destructive rounded-xl hover:bg-destructive/20 disabled:opacity-50 transition-colors"
                       >
                         {deletingId === product.id ? "..." : "Delete"}
                       </button>

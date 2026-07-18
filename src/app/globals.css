@@ -13,6 +13,9 @@
   --warning: #f59e0b;
   --ring: #0a0a0a;
   --radius: 0.75rem;
+  --skeleton-from: var(--border);
+  --skeleton-via: #d1d5db;
+  --skeleton-to: var(--border);
 }
 
 @theme inline {
@@ -27,6 +30,8 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-ring: var(--ring);
+  --color-accent: #6366f1;
+  --color-accent-foreground: #ffffff;
   --radius-lg: var(--radius);
 }
 
@@ -40,6 +45,12 @@
     --border: #27272a;
     --card: #18181b;
     --ring: #fafafa;
+    --destructive: #f87171;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --skeleton-from: #27272a;
+    --skeleton-via: #3f3f46;
+    --skeleton-to: #27272a;
   }
 }
 
@@ -55,18 +66,27 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer utilities {
   .skeleton {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    background: linear-gradient(90deg, var(--border) 25%, #d1d5db 50%, var(--border) 75%);
+    background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-via) 50%, var(--skeleton-to) 75%);
     background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
     border-radius: 0.5rem;
   }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .focus-ring {
