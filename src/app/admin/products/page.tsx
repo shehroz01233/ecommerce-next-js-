@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { AdminAPI, Product } from "../../lib/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -13,6 +13,7 @@ export default function AdminProductsContent() {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const { addToast } = useToast();
+  const fetchRef = useRef(0);
 
   const fetchProducts = async (signal?: AbortSignal) => {
     setLoading(true);
@@ -38,6 +39,14 @@ export default function AdminProductsContent() {
     fetchProducts(controller.signal);
     return () => controller.abort();
   }, []);
+
+  const refresh = () => {
+    const id = ++fetchRef.current;
+    const controller = new AbortController();
+    fetchProducts(controller.signal).finally(() => {
+      if (id === fetchRef.current) setLoading(false);
+    });
+  };
 
   const handleDelete = async (id: number, name: string) => {
     if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
@@ -98,7 +107,7 @@ export default function AdminProductsContent() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => fetchProducts()}
+            onClick={refresh}
             className="btn-secondary px-4 py-2.5 hover:bg-muted/10 transition-colors"
           >
             Refresh

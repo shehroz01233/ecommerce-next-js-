@@ -48,8 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const userData = await AuthAPI.me(controller.signal);
           if (!controller.signal.aborted) setUser(userData);
-        } catch {
-          if (!controller.signal.aborted) removeToken();
+        } catch (err) {
+          if (!controller.signal.aborted) {
+            const status = err instanceof Response ? err.status : (err as { status?: number })?.status;
+            if (status === 401) removeToken();
+          }
         }
       }
       if (!controller.signal.aborted) setLoading(false);

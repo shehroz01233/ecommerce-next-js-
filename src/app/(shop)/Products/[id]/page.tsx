@@ -222,7 +222,7 @@ export default function ProductDetailPage() {
                 </button>
                 <span className="w-12 text-center text-sm font-medium">{quantity}</span>
                 <button
-                  onClick={() => setQuantity((q) => Math.min(q + 1, product.stock && product.stock > 0 ? product.stock : 1))}
+                  onClick={() => setQuantity((q) => Math.min(q + 1, product.stock != null && product.stock > 0 ? product.stock : 999))}
                   aria-label="Increase quantity"
                   className="w-10 h-10 flex items-center justify-center text-muted transition-base hover:bg-muted/10"
                 >

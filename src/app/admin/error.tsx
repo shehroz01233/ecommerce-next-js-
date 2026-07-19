@@ -1,5 +1,15 @@
 "use client";
 
+function sanitize(message: string): string {
+  return message
+    .replace(/\s*at\s+.*?\n?/g, "")
+    .replace(/\s*\(.*?\)/g, "")
+    .replace(/\s*https?:\/\/\S+/g, "")
+    .replace(/^\s*$/gm, "")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
+
 export default function AdminError({
   error,
   reset,
@@ -7,6 +17,8 @@ export default function AdminError({
   error: Error;
   reset: () => void;
 }) {
+  const safeMessage = sanitize(error.message || "An error occurred in the admin panel.");
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-16 text-center">
       <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mb-6 mx-auto">
@@ -15,7 +27,7 @@ export default function AdminError({
         </svg>
       </div>
       <h2 className="text-xl font-semibold mb-2">Admin Error</h2>
-      <p className="text-sm text-muted mb-6">{error.message || "An error occurred in the admin panel."}</p>
+      <p className="text-sm text-muted mb-6">{safeMessage}</p>
       <button onClick={reset} className="btn-primary">Try Again</button>
     </div>
   );

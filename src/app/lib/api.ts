@@ -2,8 +2,8 @@
 // DATABASE_URL is for the database connection, not an API endpoint — never use it as the API URL.
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
-if (process.env.NODE_ENV === "production" && BASE_URL.startsWith("http://")) {
-  console.error("[SECURITY] NEXT_PUBLIC_API_URL must use HTTPS in production");
+if (typeof window !== "undefined" && process.env.NODE_ENV === "production" && BASE_URL.startsWith("http://")) {
+  console.error("[SECURITY] NEXT_PUBLIC_API_URL must use HTTPS in production. Auth tokens may be sent in cleartext.");
 }
 
 import { getToken } from "./auth";
@@ -14,6 +14,9 @@ async function request<T = any>(
 ): Promise<T> {
   try {
     const token = getToken();
+    if (token && typeof window !== "undefined" && process.env.NODE_ENV === "production" && BASE_URL.startsWith("http://")) {
+      throw new Error("[SECURITY] Refusing to send auth token over HTTP in production. Set NEXT_PUBLIC_API_URL to an HTTPS URL.");
+    }
 
     const res = await fetch(`${BASE_URL}${endpoint}`, {
       ...options,
@@ -179,7 +182,7 @@ export const AuthAPI = {
   login: (data: { email: string; password: string }) =>
     post<{ access_token: string; user?: User }>("/api/auth/login", data),
 
-  me: () => get<User>("/api/auth/me"),
+  me: (signal?: AbortSignal) => get<User>("/api/auth/me", signal),
 };
 
 // =====================

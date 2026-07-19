@@ -7,22 +7,29 @@ import { CartItem as CartItemType } from "../lib/api";
 function CartItem({ item }: { item: CartItemType }) {
   const { addToCart, removeFromCart, decreaseQuantity } = useCart();
   const product = item.product;
-  const lastClickRef = useRef(0);
-  if (!product) return null;
+  const increaseRef = useRef(0);
+  const decreaseRef = useRef(0);
+  const inflightRef = useRef(false);
 
   const handleIncrease = useCallback(() => {
+    if (inflightRef.current) return;
     const now = Date.now();
-    if (now - lastClickRef.current < 300) return;
-    lastClickRef.current = now;
-    addToCart(product);
+    if (now - increaseRef.current < 300) return;
+    increaseRef.current = now;
+    inflightRef.current = true;
+    addToCart(product).finally(() => { inflightRef.current = false; });
   }, [addToCart, product]);
 
   const handleDecrease = useCallback(() => {
+    if (inflightRef.current) return;
     const now = Date.now();
-    if (now - lastClickRef.current < 300) return;
-    lastClickRef.current = now;
-    decreaseQuantity(product.id);
+    if (now - decreaseRef.current < 300) return;
+    decreaseRef.current = now;
+    inflightRef.current = true;
+    decreaseQuantity(product.id).finally(() => { inflightRef.current = false; });
   }, [decreaseQuantity, product.id]);
+
+  if (!product) return null;
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 border border-border rounded-2xl bg-card transition-all duration-200 hover:shadow-sm">

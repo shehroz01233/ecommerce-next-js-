@@ -41,6 +41,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const initializedRef = useRef(false);
   const cartRef = useRef<CartItemData[]>([]);
+  const refreshIdRef = useRef(0);
 
   useEffect(() => { cartRef.current = cart; });
 
@@ -81,9 +82,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const refreshCart = useCallback(async () => {
     if (!getToken()) return;
+    const id = ++refreshIdRef.current;
     setLoading(true);
     try {
       const data = await CartAPI.getCart();
+      if (id !== refreshIdRef.current) return;
       if (Array.isArray(data)) {
         setCart(data);
       } else if (Array.isArray((data as Record<string, unknown>)?.items)) {
@@ -92,7 +95,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch {
       // backend may not support cart endpoint, keep local
     } finally {
-      setLoading(false);
+      if (id === refreshIdRef.current) setLoading(false);
     }
   }, []);
 

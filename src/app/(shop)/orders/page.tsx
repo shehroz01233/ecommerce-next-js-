@@ -154,7 +154,7 @@ function OrdersContent() {
                       </div>
                       <div className="text-muted shrink-0 ml-4">
                         × {item.quantity}
-                        {item.price && <span className="ml-2 font-medium text-foreground">${(item.price * item.quantity).toFixed(2)}</span>}
+                        {item.price != null && <span className="ml-2 font-medium text-foreground">${(item.price * item.quantity).toFixed(2)}</span>}
                       </div>
                     </div>
                   ))}

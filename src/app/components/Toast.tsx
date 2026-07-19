@@ -21,8 +21,19 @@ let globalId = 0;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [mounted, setMounted] = useState(false);
+  const timersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+  /* eslint-disable react-hooks/set-state-in-effect -- mount detection for SSR portal */
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => { timers.forEach((t) => clearTimeout(t)); timers.clear(); };
+  }, []);
 
   const removeToast = useCallback((id: number) => {
+    const timer = timersRef.current.get(id);
+    if (timer) { clearTimeout(timer); timersRef.current.delete(id); }
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
@@ -30,7 +41,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     (type: ToastType, message: string, duration = 3000) => {
       const id = ++globalId;
       setToasts((prev) => [...prev.slice(-4), { id, type, message }]);
-      setTimeout(() => removeToast(id), duration);
+      const timer = setTimeout(() => removeToast(id), duration);
+      timersRef.current.set(id, timer);
     },
     [removeToast]
   );
@@ -38,7 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ addToast }}>
       {children}
-      {createPortal(
+      {mounted && createPortal(
         <div className="fixed bottom-4 right-4 z-50 flex flex-col-reverse gap-2 max-w-sm" aria-label="Notifications">
           {toasts.map((toast, i) => (
             <Toast key={toast.id} {...toast} onClose={() => removeToast(toast.id)} offset={i} />
@@ -57,7 +69,6 @@ export function useToast() {
 }
 
 function Toast({
-  id: _id,
   type = "info",
   message,
   onClose,
@@ -89,7 +100,7 @@ function Toast({
     success: "border-success/30 bg-success/5 text-success",
     error: "border-destructive/30 bg-destructive/5 text-destructive",
     info: "border-border bg-card text-foreground",
-    warning: "border-warning/30 bg-warning/5 text-yellow-700",
+    warning: "border-warning/30 bg-warning/5 text-warning",
   };
 
   const icons: Record<ToastType, string> = {

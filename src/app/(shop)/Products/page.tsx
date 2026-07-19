@@ -37,6 +37,7 @@ function ProductsContent() {
 
   useEffect(() => {
     const id = ++fetchIdRef.current;
+    /* eslint-disable react-hooks/set-state-in-effect -- initial data fetch */
     setLoading(true);
     setError("");
 
@@ -243,7 +244,7 @@ function ProductsContent() {
             <div className="flex items-center justify-center gap-1.5 mt-10">
               <button
                 disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
+                onClick={() => { setPage((p) => Math.max(1, p - 1)); pushURL({ page: Math.max(1, page - 1) }); }}
                 className="btn-secondary px-3 py-1.5 text-xs"
               >
                 Previous
@@ -264,7 +265,7 @@ function ProductsContent() {
                   ) : (
                     <button
                       key={p}
-                      onClick={() => setPage(p)}
+                      onClick={() => { setPage(p); pushURL({ page: p }); }}
                       className={`w-9 h-9 rounded-xl text-sm font-medium transition-base ${
                         p === page
                           ? "bg-primary text-primary-foreground"
@@ -278,7 +279,7 @@ function ProductsContent() {
               })()}
               <button
                 disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
+                onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); pushURL({ page: Math.min(totalPages, page + 1) }); }}
                 className="btn-secondary px-3 py-1.5 text-xs"
               >
                 Next

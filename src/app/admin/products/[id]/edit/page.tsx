@@ -29,14 +29,14 @@ function EditProductContent() {
     category: string;
     stock: string;
   } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isNaN(id) && id > 0);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(id && !isNaN(id) ? "" : "Invalid product ID");
   const isCurrentRef = useRef(true);
 
   useEffect(() => {
     isCurrentRef.current = true;
-    if (!id) return;
+    if (!id || isNaN(id)) return;
     const controller = new AbortController();
     const fetchProduct = async () => {
       try {
@@ -90,6 +90,25 @@ function EditProductContent() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error && !initialData) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <Link
+            href="/admin/products"
+            className="text-sm text-muted hover:text-foreground transition-colors inline-flex items-center gap-1.5 mb-4"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to products
+          </Link>
+        </div>
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 text-destructive text-sm">{error}</div>
       </div>
     );
   }

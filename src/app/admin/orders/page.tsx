@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { AdminAPI, Order } from "../../lib/api";
 import { statusColor } from "../../lib/utils";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -13,6 +13,7 @@ export default function AdminOrdersContent() {
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const { addToast } = useToast();
+  const fetchRef = useRef(0);
 
   const fetchOrders = async (signal?: AbortSignal) => {
     setLoading(true);
@@ -40,6 +41,14 @@ export default function AdminOrdersContent() {
     fetchOrders(controller.signal);
     return () => controller.abort();
   }, []);
+
+  const refresh = () => {
+    const id = ++fetchRef.current;
+    const controller = new AbortController();
+    fetchOrders(controller.signal).finally(() => {
+      if (id === fetchRef.current) setLoading(false);
+    });
+  };
 
   const handleStatusUpdate = async (orderId: number, newStatus: string) => {
     setUpdatingId(orderId);
@@ -91,7 +100,7 @@ export default function AdminOrdersContent() {
           <p className="text-sm text-muted mt-1">{orders.length} total order{orders.length !== 1 ? "s" : ""}</p>
         </div>
         <button
-          onClick={() => fetchOrders()}
+          onClick={refresh}
           className="btn-secondary px-4 py-2.5 hover:bg-muted/10 transition-colors"
         >
           Refresh
