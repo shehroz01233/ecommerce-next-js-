@@ -96,14 +96,6 @@ function put<T = any>(url: string, body?: any, signal?: AbortSignal) {
   });
 }
 
-function patch<T = any>(url: string, body?: any, signal?: AbortSignal) {
-  return request<T>(url, {
-    method: "PATCH",
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    signal,
-  });
-}
-
 function del<T = any>(url: string, signal?: AbortSignal) {
   return request<T>(url, { method: "DELETE", signal });
 }
@@ -182,7 +174,7 @@ export const AuthAPI = {
   login: (data: { email: string; password: string }) =>
     post<{ access_token: string; user?: User }>("/api/auth/login", data),
 
-  me: (signal?: AbortSignal) => get<User>("/api/auth/me", signal),
+  me: (signal?: AbortSignal) => get<User>("/api/users/me", signal),
 };
 
 // =====================
@@ -214,10 +206,10 @@ export const ProductAPI = {
 
   getCategories: (signal?: AbortSignal) => get<string[]>("/api/products/categories", signal),
 
-  getReviews: (id: number, signal?: AbortSignal) => get<Review[]>(`/api/products/${id}/reviews`, signal),
+  getReviews: (id: number, signal?: AbortSignal) => get<Review[]>(`/api/reviews/product/${id}`, signal),
 
   addReview: (id: number, data: { rating: number; comment: string }, signal?: AbortSignal) =>
-    post<Review>(`/api/products/${id}/reviews`, data, signal),
+    post<Review>("/api/reviews/", { product_id: id, ...data }, signal),
 };
 
 // =====================
@@ -248,48 +240,30 @@ export const OrderAPI = {
     post<Order>("/api/orders", data, signal),
 
   getUserOrders: (signal?: AbortSignal) => get<Order[]>("/api/orders", signal),
-
-  getOrderById: (id: number, signal?: AbortSignal) => get<Order>(`/api/orders/${id}`, signal),
 };
 
 // =====================
 // ADMIN API
 // =====================
 export const AdminAPI = {
-  getDashboard: (signal?: AbortSignal) => get<{ orders: Order[] }>("/api/admin", signal),
+  getDashboard: (signal?: AbortSignal) => get<{ orders: Order[] }>("/api/admin/", signal),
 
   getStats: (signal?: AbortSignal) => get<DashboardStats>("/api/admin/stats", signal),
 
-  getAllProducts: (signal?: AbortSignal) => get<Product[]>("/api/admin/products", signal),
+  getAllProducts: (signal?: AbortSignal) => get<Product[]>("/api/products/", signal),
 
   createProduct: (data: Partial<Product>, signal?: AbortSignal) =>
-    post<Product>("/api/admin/products", data, signal),
+    post<Product>("/api/products/", data, signal),
 
   updateProduct: (id: number, data: Partial<Product>, signal?: AbortSignal) =>
-    put<Product>(`/api/admin/products/${id}`, data, signal),
+    put<Product>(`/api/products/${id}`, data, signal),
 
-  deleteProduct: (id: number, signal?: AbortSignal) => del(`/api/admin/products/${id}`, signal),
+  deleteProduct: (id: number, signal?: AbortSignal) => del(`/api/products/${id}`, signal),
 
-  getAllOrders: (signal?: AbortSignal) => get<Order[]>("/api/admin/orders", signal),
+  getAllOrders: (signal?: AbortSignal) => get<Order[]>("/api/orders/", signal),
 
   updateOrderStatus: (id: number, status: string, signal?: AbortSignal) =>
-    patch<Order>(`/api/admin/orders/${id}`, { status }, signal),
+    put<Order>(`/api/orders/${id}`, { status }, signal),
 
   getAllUsers: (signal?: AbortSignal) => get<User[]>("/api/admin/users", signal),
-};
-
-// =====================
-// WISHLIST API
-// =====================
-export const WishlistAPI = {
-  getAll: (signal?: AbortSignal) => get<Product[]>("/api/wishlist", signal),
-
-  add: (productId: number, signal?: AbortSignal) =>
-    post<{ message?: string }>(`/api/wishlist/${productId}`, undefined, signal),
-
-  remove: (productId: number, signal?: AbortSignal) =>
-    del(`/api/wishlist/${productId}`, signal),
-
-  check: (productId: number, signal?: AbortSignal) =>
-    get<{ wishlisted: boolean }>(`/api/wishlist/${productId}/check`, signal),
 };
