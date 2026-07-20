@@ -75,8 +75,6 @@ async function request<T = any>(
     return data as T;
   } catch (err: any) {
     if (err.name === "AbortError") throw err;
-    if (err instanceof Error && err.message.startsWith("Authentication required")) throw err;
-    if (err instanceof Error && err.message.startsWith("Server error")) throw err;
     if (err.name === "TypeError" && err.message.includes("fetch")) {
       throw new ApiError("Network error – server may be offline", 0);
     }

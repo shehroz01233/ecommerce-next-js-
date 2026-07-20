@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, memo } from "react";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../hooks/useCart";
 import { Product } from "../lib/api";
 import { useToast } from "./Toast";
 

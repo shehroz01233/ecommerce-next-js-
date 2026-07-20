@@ -9,8 +9,7 @@ import {
   ReactNode,
 } from "react";
 
-import { AuthAPI, User } from "../lib/api";
-import { ApiError } from "../lib/api";
+import { AuthAPI, User, ApiError } from "../lib/api";
 import { setToken, getToken, removeToken } from "../lib/auth";
 
 interface RegisterData {
@@ -63,6 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (data: LoginData) => {
     const response = await AuthAPI.login(data);
+    if (!response.access_token) {
+      throw new Error("No access token received from server");
+    }
 
     try {
       if (response.user) {

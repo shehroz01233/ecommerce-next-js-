@@ -37,11 +37,3 @@ export function removeToken() {
 export function isAuthenticated(): boolean {
   return !!getToken();
 }
-
-// ========================
-// Logout
-// ========================
-export function logout() {
-  removeToken();
-  window.location.href = "/login";
-}
