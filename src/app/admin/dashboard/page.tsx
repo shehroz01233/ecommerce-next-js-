@@ -97,7 +97,6 @@ export default function AdminDashboardContent() {
     {
       label: "Users",
       value: stats?.totalUsers ?? 0,
-      link: "/admin/users",
       gradient: "from-purple-500/10 to-purple-600/5",
       iconColor: "text-purple-600",
       icon: StatIcons.users,
@@ -166,8 +165,8 @@ export default function AdminDashboardContent() {
         {statCards.map((stat) => (
           <button
             key={stat.label}
-            onClick={() => router.push(stat.link)}
-            className={`text-left p-5 rounded-2xl border border-border bg-gradient-to-br ${stat.gradient} hover:shadow-md transition-all duration-200`}
+            onClick={() => stat.link && router.push(stat.link)}
+            className={`text-left p-5 rounded-2xl border border-border bg-gradient-to-br ${stat.gradient} hover:shadow-md transition-all duration-200${stat.link ? "" : " cursor-default"}`}
           >
             <div className={`w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center ${stat.iconColor} mb-3`}>
               {stat.icon}
