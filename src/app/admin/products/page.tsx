@@ -14,6 +14,7 @@ export default function AdminProductsContent() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const { addToast } = useToast();
   const fetchRef = useRef(0);
+  const refreshControllerRef = useRef<AbortController | null>(null);
 
   const fetchProducts = async (signal?: AbortSignal) => {
     setLoading(true);
@@ -37,12 +38,17 @@ export default function AdminProductsContent() {
     const controller = new AbortController();
     /* eslint-disable react-hooks/set-state-in-effect -- initial data fetch */
     fetchProducts(controller.signal);
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      refreshControllerRef.current?.abort();
+    };
   }, []);
 
   const refresh = () => {
+    refreshControllerRef.current?.abort();
     const id = ++fetchRef.current;
     const controller = new AbortController();
+    refreshControllerRef.current = controller;
     fetchProducts(controller.signal).finally(() => {
       if (id === fetchRef.current) setLoading(false);
     });

@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import { AuthAPI, User } from "../lib/api";
+import { ApiError } from "../lib/api";
 import { setToken, getToken, removeToken } from "../lib/auth";
 
 interface RegisterData {
@@ -50,8 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!controller.signal.aborted) setUser(userData);
         } catch (err) {
           if (!controller.signal.aborted) {
-            const status = err instanceof Response ? err.status : (err as { status?: number })?.status;
-            if (status === 401) removeToken();
+            if (err instanceof ApiError && err.status === 401) removeToken();
           }
         }
       }
@@ -66,16 +66,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       if (response.user) {
-        setUser(response.user);
         setToken(response.access_token);
+        setUser(response.user);
       } else {
         setToken(response.access_token);
-        const me = await AuthAPI.me();
-        setUser(me);
+        try {
+          const me = await AuthAPI.me();
+          setUser(me);
+        } catch {
+          removeToken();
+          throw new Error("Failed to load user profile");
+        }
       }
-    } catch {
+    } catch (err) {
       removeToken();
-      throw new Error("Failed to load user profile");
+      throw err;
     }
   }, []);
 

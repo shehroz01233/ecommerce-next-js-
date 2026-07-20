@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../hooks/useAuth";
+import { UserAPI } from "../../lib/api";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { useToast } from "../../components/Toast";
 
@@ -25,9 +26,11 @@ function ProfileContent() {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) return;
     setLoading(true);
     try {
-      updateUser({ name });
+      const updated = await UserAPI.updateProfile({ name: name.trim() });
+      updateUser(updated);
       addToast("success", "Profile updated!");
     } catch (err: unknown) {
       addToast("error", err instanceof Error ? err.message : "Update failed");

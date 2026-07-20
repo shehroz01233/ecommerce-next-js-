@@ -45,6 +45,7 @@ export default function ProductForm({
 }: ProductFormProps) {
   const [form, setForm] = useState<ProductFormData>(initialData || defaultData);
   const [imgError, setImgError] = useState(false);
+  const [formError, setFormError] = useState("");
   const [prevInitialData, setPrevInitialData] = useState(initialData);
   if (prevInitialData !== initialData) {
     setPrevInitialData(initialData);
@@ -66,7 +67,11 @@ export default function ProductForm({
     e.preventDefault();
 
     const priceNum = Number(form.price);
-    if (!form.name.trim() || !form.price || isNaN(priceNum) || priceNum <= 0) return;
+    if (!form.name.trim() || !form.price || isNaN(priceNum) || priceNum <= 0) {
+      setFormError("Please enter a valid product name and price.");
+      return;
+    }
+    setFormError("");
 
     const stockNum = form.stock ? Number(form.stock) : 0;
 
@@ -88,6 +93,15 @@ export default function ProductForm({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           {error}
+        </div>
+      )}
+
+      {formError && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-3.5 text-destructive text-sm mb-5 flex items-center gap-2.5">
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {formError}
         </div>
       )}
 

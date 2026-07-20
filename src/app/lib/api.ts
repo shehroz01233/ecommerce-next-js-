@@ -8,6 +8,15 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "production" && BA
 
 import { getToken } from "./auth";
 
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 async function request<T = any>(
   endpoint: string,
   options: RequestInit = {}
@@ -15,7 +24,7 @@ async function request<T = any>(
   try {
     const token = getToken();
     if (token && typeof window !== "undefined" && process.env.NODE_ENV === "production" && BASE_URL.startsWith("http://")) {
-      throw new Error("[SECURITY] Refusing to send auth token over HTTP in production. Set NEXT_PUBLIC_API_URL to an HTTPS URL.");
+      throw new ApiError("[SECURITY] Refusing to send auth token over HTTP in production. Set NEXT_PUBLIC_API_URL to an HTTPS URL.", 0);
     }
 
     const res = await fetch(`${BASE_URL}${endpoint}`, {
@@ -60,7 +69,7 @@ async function request<T = any>(
           ? "Server error. Please try again later"
           : statusMessages[res.status] ||
             "Something went wrong. Please try again.";
-      throw new Error(friendly);
+      throw new ApiError(friendly, res.status);
     }
 
     return data as T;
@@ -69,10 +78,10 @@ async function request<T = any>(
     if (err instanceof Error && err.message.startsWith("Authentication required")) throw err;
     if (err instanceof Error && err.message.startsWith("Server error")) throw err;
     if (err.name === "TypeError" && err.message.includes("fetch")) {
-      throw new Error("Network error – server may be offline");
+      throw new ApiError("Network error – server may be offline", 0);
     }
     if (err instanceof Error) throw err;
-    throw new Error("Unknown error");
+    throw new ApiError("Unknown error", 0);
   }
 }
 
@@ -178,6 +187,14 @@ export const AuthAPI = {
 };
 
 // =====================
+// USER API
+// =====================
+export const UserAPI = {
+  updateProfile: (data: { name: string }, signal?: AbortSignal) =>
+    put<User>("/api/users/me", data, signal),
+};
+
+// =====================
 // PRODUCT API
 // =====================
 export const ProductAPI = {
@@ -239,7 +256,7 @@ export const OrderAPI = {
   }, signal?: AbortSignal) =>
     post<Order>("/api/orders", data, signal),
 
-  getUserOrders: (signal?: AbortSignal) => get<Order[]>("/api/orders", signal),
+  getUserOrders: (signal?: AbortSignal) => get<Order[]>("/api/orders/user/me", signal),
 };
 
 // =====================
